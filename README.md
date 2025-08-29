@@ -1,4 +1,4 @@
-# Libiop Wrapper
+# CAPSS - Libiop Wrapper
 
 The wrapper aims to prove knowledge of a Rank-1 constraint system (R1CS) encoding in some files using the Aurora SNARK. The R1CS files are:
   * `r1cs-field.txt` that contains the information about the R1CS field;
