@@ -1,4 +1,4 @@
-# CAPSS - Libiop Wrapper
+# Aggregation of CAPSS Signatures
 
 The wrapper aims to prove knowledge of a Rank-1 constraint system (R1CS) encoding in some files using the Aurora SNARK. The R1CS files are:
   * `r1cs-field.txt` that contains the information about the R1CS field;
@@ -6,6 +6,19 @@ The wrapper aims to prove knowledge of a Rank-1 constraint system (R1CS) encodin
   * `r1cs-primary-inputs.txt` that contains the assignment of the public R1CS variables (part of the proved statement);
   * `r1cs-auxiliary-inputs.txt` that contains the assigment of the auxiliary R1CS variables (part of the witness).
 Those files can be generated using the Python implementation of the CAPSS framework.
+
+📄 The accompanying paper introducing CAPSS is available on the IACR ePrint archive: [https://eprint.iacr.org/2025/061](https://eprint.iacr.org/2025/061).
+
+This wrapper has been used to produce the aggregation performance numbers in Table 6 of the CAPSS article:
+
+| #Sigs                | 1      | 4      | 16     | 64     | 256    | 1024   |
+|----------------------|--------|--------|--------|--------|--------|--------|
+| #R1CS                | ≤ 2^15 | ≤ 2^17 | ≤ 2^19 | ≤ 2^21 | ≤ 2^23 | ≤ 2^25 |
+| t_aggr (s)           | 2.6    | 12     | 49     | 208    | 906    | 3872   |
+| t_verif (s)          | 0.5    | 1.9    | 7.8    | 31     | 127    | 513    |
+| \|proof\| (KB)       | 128    | 153    | 181    | 209    | 241    | 271    |
+| \|proof\|/#Sigs (KB) | 128    | 38     | 11     | 3.3    | 0.94   | 0.26   |
+
 
 ## Instructions
 
