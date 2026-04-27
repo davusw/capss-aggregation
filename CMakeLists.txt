@@ -1,3 +1,4 @@
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 cmake_minimum_required(VERSION 3.1)
 
 set(CMAKE_CXX_STANDARD 14)
@@ -38,8 +39,8 @@ option(USE_ASAN "Enable Clang address sanitizer" OFF)
 option(USE_UBSAN "Enable Clang undefined behavior sanitizer" OFF)
 
 
-
-if(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+string(TOLOWER ${CMAKE_CXX_COMPILER_ID} compiler_id_lower)
+if(CMAKE_COMPILER_IS_GNUCXX OR "${compiler_id_lower}" MATCHES ".*clang.*")
   # Common compilation flags and warning configuration
   # TODO: upstream -Wno-... patches in libff, libfqfft
   set(DISABLED_WARNINGS
@@ -53,7 +54,7 @@ if(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     )
   set(
     CMAKE_CXX_FLAGS
-    "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -Wfatal-errors ${DISABLED_WARNINGS} -L/usr/local/lib"
+    "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -Wfatal-errors ${DISABLED_WARNINGS}"
     )
   # Default optimizations flags (to override, use -DOPT_FLAGS=...)
   if("${OPT_FLAGS}" STREQUAL "")
@@ -70,17 +71,24 @@ set(
 )
 
 # TODO: figure out a fix and unsilence this
-if(CMAKE_CXX_COMPILER_ID STREQUAL Clang)
-  set(
-    CMAKE_CXX_FLAGS
-    "${CMAKE_CXX_FLAGS} ${DISABLED_WARNINGS_CLANG}"
-    )
+if(compiler_id_lower MATCHES ".*clang.*")
+    EXECUTE_PROCESS( COMMAND ${CMAKE_CXX_COMPILER} --version OUTPUT_VARIABLE clang_full_version_string )
+    string (REGEX REPLACE ".*clang version ([0-9]+\\.[0-9]+).*" "\\1" CLANG_VERSION_STRING ${clang_full_version_string})
+    if(CLANG_VERSION_STRING GREATER_EQUAL 13.0)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-but-set-variable -Wno-error=unused-but-set-variable")
+    else()
+      if(NOT CMAKE_CXX_FLAGS MATCHES "-Werror")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+      endif(NOT CMAKE_CXX_FLAGS MATCHES "-Werror")
+    endif()
 else()
   set(
     CMAKE_CXX_FLAGS
     "${CMAKE_CXX_FLAGS} ${DISABLED_WARNINGS_NOT_CLANG}"
     )
 endif()
+
+message(CMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS})
 
 enable_testing()
 
@@ -129,6 +137,18 @@ if("${PERFORMANCE}")
     "${CMAKE_EXE_LINKER_FLAGS} -flto"
     )
   set(BENCHMARK_ENABLE_LTO ON CACHE BOOL "Enable link time optimisation of the benchmark library.")
+endif()
+
+# Detect architecture
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64|i[3-6]86")
+  set(IS_X86 TRUE)
+else()
+  set(IS_X86 FALSE)
+endif()
+
+# Disable USE_ASM on non-x86 (asm paths are x86-only in libff)
+if(NOT IS_X86)
+  set(USE_ASM OFF CACHE BOOL "Use architecture-specific optimized assembly code" FORCE)
 endif()
 
 if("${USE_ASM}")
